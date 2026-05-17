@@ -6,7 +6,8 @@ AAOIFI Standard No. 21 Shariah Screening + Damodaran DCF Valuation
 import os, json, time, requests
 import anthropic
 
-FMP_BASE = "https://financialmodelingprep.com/api/v3"
+FMP_BASE = "https://financialmodelingprep.com/stable"
+FMP_V3   = "https://financialmodelingprep.com/api/v3"
 
 SECTOR_TICKERS = {
     "Technology": [
@@ -124,37 +125,37 @@ def fmp_get(endpoint, api_key, params=None, retries=3):
 
 
 def get_profile(ticker, api_key):
-    data = fmp_get(f"profile/{ticker}", api_key)
+    data = fmp_get("profile", api_key, {"symbol": ticker})
     return data[0] if data else None
 
 
 def get_income(ticker, api_key):
-    data = fmp_get(f"income-statement/{ticker}", api_key, {"limit": 1})
+    data = fmp_get("income-statement", api_key, {"symbol": ticker, "limit": 1})
     return data[0] if data else None
 
 
 def get_balance(ticker, api_key):
-    data = fmp_get(f"balance-sheet-statement/{ticker}", api_key, {"limit": 1})
+    data = fmp_get("balance-sheet-statement", api_key, {"symbol": ticker, "limit": 1})
     return data[0] if data else None
 
 
 def get_cashflow(ticker, api_key):
-    data = fmp_get(f"cash-flow-statement/{ticker}", api_key, {"limit": 1})
+    data = fmp_get("cash-flow-statement", api_key, {"symbol": ticker, "limit": 1})
     return data[0] if data else None
 
 
 def get_metrics(ticker, api_key):
-    data = fmp_get(f"key-metrics/{ticker}", api_key, {"limit": 1})
+    data = fmp_get("key-metrics", api_key, {"symbol": ticker, "limit": 1})
     return data[0] if data else None
 
 
 def get_ratios(ticker, api_key):
-    data = fmp_get(f"ratios/{ticker}", api_key, {"limit": 1})
+    data = fmp_get("ratios", api_key, {"symbol": ticker, "limit": 1})
     return data[0] if data else None
 
 
 def get_quote(ticker, api_key):
-    data = fmp_get(f"quote/{ticker}", api_key)
+    data = fmp_get("quote", api_key, {"symbol": ticker})
     if data:
         q = data[0]
         return q.get("price"), q.get("yearHigh"), q.get("yearLow")
