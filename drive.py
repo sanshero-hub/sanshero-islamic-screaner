@@ -47,7 +47,10 @@ def get_or_create_folder(service, name, parent_id=None):
 
 
 def ensure_folder_structure(service):
-    root_id = get_or_create_folder(service, "Islamic Screener")
+    if root_folder_id:
+        root_id = root_folder_id
+    else:
+        root_id = get_or_create_folder(service, "Islamic Screener")
     folder_ids = {"root": root_id}
     for key, name in FOLDER_NAMES.items():
         folder_ids[key] = get_or_create_folder(service, name, root_id)

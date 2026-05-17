@@ -123,7 +123,8 @@ def connect_drive():
         return False
     try:
         svc = get_drive_service(creds)
-        fids = ensure_folder_structure(svc)
+        root_folder_id = st.secrets.get("GOOGLE_DRIVE_ROOT_FOLDER_ID", None)
+        fids = ensure_folder_structure(svc, root_folder_id)
         st.session_state["drive_service"] = svc
         st.session_state["folder_ids"]    = fids
         st.session_state["credentials_loaded"] = True
@@ -131,7 +132,6 @@ def connect_drive():
     except Exception as e:
         st.error(f"Google Drive connection failed: {e}")
         return False
-
 
 # ── Load training data from Drive ─────────────────────────────────────────────
 def load_drive_training_data():
