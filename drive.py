@@ -46,7 +46,7 @@ def get_or_create_folder(service, name, parent_id=None):
     return folder["id"]
 
 
-def ensure_folder_structure(service):
+def ensure_folder_structure(service, root_folder_id=None):
     if root_folder_id:
         root_id = root_folder_id
     else:
@@ -55,7 +55,6 @@ def ensure_folder_structure(service):
     for key, name in FOLDER_NAMES.items():
         folder_ids[key] = get_or_create_folder(service, name, root_id)
     return folder_ids
-
 
 def list_files_in_folder(service, folder_id):
     q = f"'{folder_id}' in parents and trashed=false"
