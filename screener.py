@@ -125,9 +125,18 @@ def fmp_get(endpoint, api_key, params=None, retries=3):
 
 
 def get_profile(ticker, api_key):
-    """Returns company profile with mktCap, sector, industry, description, price"""
+    """Returns company profile — sector, industry, description, sharesOutstanding"""
     data = fmp_get("profile", api_key, {"symbol": ticker})
     return data[0] if data else None
+
+
+def get_market_cap(ticker, api_key):
+    """Market cap moved to dedicated endpoint in FMP stable API"""
+    data = fmp_get("market-capitalization", api_key, {"symbol": ticker})
+    if data:
+        d = data[0] if isinstance(data, list) else data
+        return d.get("marketCap") or d.get("mktCap") or 0
+    return 0
 
 
 def get_income(ticker, api_key):
@@ -193,16 +202,10 @@ def sector_screen(profile):
 
 # ── AAOIFI Layer 2 — Financial ratio screen ───────────────────────────────────
 
-def ratio_screen(profile, income, balance):
+def ratio_screen(profile, income, balance, mkt_cap=0):
     """
     AAOIFI Standard No. 21 three-ratio screen.
-    Sources:
-      - mktCap: from profile endpoint
-      - totalDebt: shortTermDebt + longTermDebt from balance sheet
-        (FMP stable uses 'shortTermDebt' and 'longTermDebt')
-      - cash: cashAndCashEquivalents + shortTermInvestments from balance sheet
-      - interestIncome: from income statement (interest earned on cash/investments)
-      - revenue: from income statement
+    mkt_cap is passed in separately — fetched from market-capitalization endpoint.
     """
     results = {
         "passed": True,
@@ -213,8 +216,9 @@ def ratio_screen(profile, income, balance):
         "fail_reason": "",
     }
 
-    # Market cap from profile
-    mkt_cap = (profile or {}).get("mktCap") or 0
+    # Also try profile as fallback for mkt_cap
+    if not mkt_cap:
+        mkt_cap = (profile or {}).get("mktCap") or (profile or {}).get("marketCap") or 0
 
     if mkt_cap <= 0:
         results["passed"] = False
@@ -316,7 +320,7 @@ def run_claude_valuation(anthropic_key, ticker, profile, income, balance,
         "sector": p.get("sector"),
         "industry": p.get("industry"),
         "current_price_usd": safe(current_price),
-        "market_cap_mm": mm(p.get("mktCap")),
+        "market_cap_mm": mm(p.get("mktCap") or p.get("marketCap")),
         "revenue_mm": mm(inc.get("revenue")),
         "ebitda_mm": mm(inc.get("ebitda")),
         "net_income_mm": mm(inc.get("netIncome")),
@@ -390,14 +394,15 @@ def screen_ticker(ticker, fmp_key, anthropic_key, run_mode="both",
 
     musaffa_override = (musaffa_data or {}).get(ticker)
 
-    income  = get_income(ticker, fmp_key)
-    balance = get_balance(ticker, fmp_key)
+    income   = get_income(ticker, fmp_key)
+    balance  = get_balance(ticker, fmp_key)
+    mkt_cap  = get_market_cap(ticker, fmp_key)
 
     if run_mode in ("compliance", "both"):
         sector_pass, sector_reason = sector_screen(profile)
 
         if sector_pass:
-            ratio_res = ratio_screen(profile, income, balance)
+            ratio_res = ratio_screen(profile, income, balance, mkt_cap)
         else:
             ratio_res = {
                 "passed": False, "debt_ratio": None, "cash_ratio": None,
