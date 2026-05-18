@@ -18,8 +18,8 @@ FOLDER_NAMES = {
 }
 
 DAMODARAN_FILES = [
-    "betaUSA.xls", "wacc.xls", "margins.xls",
-    "pe.xls", "EVmultiples.xls", "growth.xls",
+   "betaUSA.xls", "wacc.xls", "margin.xls",
+    "pe.xls", "vebitda.xls", "fundgrEB.xls",
 ]
 
 
